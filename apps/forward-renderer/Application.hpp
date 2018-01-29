@@ -4,6 +4,7 @@
 #include <glmlv/GLFWHandle.hpp>
 #include <glmlv/GLProgram.hpp>
 #include <glmlv/simple_geometry.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 class Application
 {
@@ -27,4 +28,15 @@ private:
     GLuint m_vaoCube, m_vaoSphere;   
     GLuint m_iboCube, m_iboSphere;
     glmlv::SimpleGeometry m_geometryCube, m_geometrySphere;
+    
+    glmlv::GLProgram m_program;
+    
+    GLint m_uModelViewProjMatrix;
+    GLint m_uModelViewMatrix;
+    GLint m_uNormalMatrix;
+    
+    glm::mat4 m_projectionMatrix;
+    glm::mat4 m_viewMatrix;
+    glm::mat4 m_cubeModelMatrix;
+    glm::mat4 m_sphereModelMatrix;
 };

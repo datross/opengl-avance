@@ -123,6 +123,15 @@ Application::Application(int argc, char** argv):
     glVertexAttribPointer(VERTEX_ATTR_UV,       3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, texCoords));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    
+    m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "forward.vs.glsl", m_ShadersRootPath / m_AppName / "forward.fs.glsl" });
+    m_uModelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
+    m_uModelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
+    m_uNormalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
+    m_program.use();
+    
+    m_projectionMatrix = glm::perspective(glm::radians(70.f), m_nWindowWidth / (float) m_nWindowHeight, 0.1f, 100.f);
+    m_viewMatrix = glm::lookAt(/* TODO */); // TODO
 }
 
 Application::~Application()
