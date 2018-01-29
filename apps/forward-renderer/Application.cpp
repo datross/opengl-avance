@@ -13,14 +13,16 @@ int Application::run()
     {
         const auto seconds = glfwGetTime();
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Put here rendering code
         
-        //
-        //
-        //
-
+        glBindVertexArray(m_vaoCube);
+        glDrawArrays(GL_TRIANGLES, 0, m_geometryCube.vertexBuffer.size());
+        glBindVertexArray(m_vaoSphere);
+        glDrawArrays(GL_TRIANGLES, 0, m_geometrySphere.vertexBuffer.size());
+        glBindVertexArray(0);
+        
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
 
@@ -62,4 +64,74 @@ Application::Application(int argc, char** argv):
 
 {
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
+    
+    
+    glEnable(GL_DEPTH_TEST);
+    
+    const GLuint VERTEX_ATTR_POSITION = 0;
+    const GLuint VERTEX_ATTR_NORMAL = 1;
+    const GLuint VERTEX_ATTR_UV = 2;
+    
+    // Init for cube
+    m_geometryCube = glmlv::makeCube();
+    
+    glGenBuffers(1, &m_vboCube);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboCube);
+    glBufferStorage(GL_ARRAY_BUFFER, m_geometryCube.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), m_geometryCube.vertexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glGenBuffers(1, &m_iboCube);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_iboCube);
+    glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, m_geometryCube.indexBuffer.size() * sizeof(uint32_t), m_geometryCube.indexBuffer.data(), 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    
+    glGenVertexArrays(1, &m_vaoCube);
+    glBindVertexArray(m_vaoCube);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_iboCube);
+    glEnableVertexAttribArray(VERTEX_ATTR_POSITION);
+    glEnableVertexAttribArray(VERTEX_ATTR_NORMAL);
+    glEnableVertexAttribArray(VERTEX_ATTR_UV);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboCube);
+    glVertexAttribPointer(VERTEX_ATTR_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
+    glVertexAttribPointer(VERTEX_ATTR_NORMAL,   3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
+    glVertexAttribPointer(VERTEX_ATTR_UV,       3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, texCoords));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    
+    // Init for sphere
+    m_geometrySphere = glmlv::makeSphere(8);
+        
+    glGenBuffers(1, &m_vboSphere);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboSphere);
+    glBufferStorage(GL_ARRAY_BUFFER, m_geometrySphere.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), m_geometrySphere.vertexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glGenBuffers(1, &m_iboSphere);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_iboSphere);
+    glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, m_geometrySphere.indexBuffer.size() * sizeof(uint32_t), m_geometrySphere.indexBuffer.data(), 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    
+    glGenVertexArrays(1, &m_vaoSphere);
+    glBindVertexArray(m_vaoSphere);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_iboSphere);
+    glEnableVertexAttribArray(VERTEX_ATTR_POSITION);
+    glEnableVertexAttribArray(VERTEX_ATTR_NORMAL);
+    glEnableVertexAttribArray(VERTEX_ATTR_UV);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboSphere);
+    glVertexAttribPointer(VERTEX_ATTR_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
+    glVertexAttribPointer(VERTEX_ATTR_NORMAL,   3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
+    glVertexAttribPointer(VERTEX_ATTR_UV,       3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, texCoords));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
+
+Application::~Application()
+{
+    glDeleteBuffers(1, &m_vboCube);
+    glDeleteBuffers(1, &m_vboSphere);
+    glDeleteBuffers(1, &m_iboCube);
+    glDeleteBuffers(1, &m_iboSphere);
+    glDeleteVertexArrays(1, &m_vaoCube);
+    glDeleteVertexArrays(1, &m_vaoSphere);
+}
+

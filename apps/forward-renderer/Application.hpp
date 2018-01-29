@@ -3,11 +3,13 @@
 #include <glmlv/filesystem.hpp>
 #include <glmlv/GLFWHandle.hpp>
 #include <glmlv/GLProgram.hpp>
+#include <glmlv/simple_geometry.hpp>
 
 class Application
 {
 public:
     Application(int argc, char** argv);
+    ~Application();
 
     int run();
 private:
@@ -19,4 +21,10 @@ private:
     const std::string m_AppName;
     const std::string m_ImGuiIniFilename;
     const glmlv::fs::path m_ShadersRootPath;
+    
+    // Cube && sphere
+    GLuint m_vboCube, m_vboSphere;
+    GLuint m_vaoCube, m_vaoSphere;   
+    GLuint m_iboCube, m_iboSphere;
+    glmlv::SimpleGeometry m_geometryCube, m_geometrySphere;
 };
