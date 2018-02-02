@@ -5,6 +5,7 @@
 #include <glmlv/GLProgram.hpp>
 #include <glmlv/simple_geometry.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glmlv/ViewController.hpp>
 
 class Application
 {
@@ -23,20 +24,24 @@ private:
     const std::string m_ImGuiIniFilename;
     const glmlv::fs::path m_ShadersRootPath;
     
-    // Cube && sphere
+    // Cube && sphere geometry
     GLuint m_vboCube, m_vboSphere;
     GLuint m_vaoCube, m_vaoSphere;   
     GLuint m_iboCube, m_iboSphere;
     glmlv::SimpleGeometry m_geometryCube, m_geometrySphere;
     
+    // shaders
     glmlv::GLProgram m_program;
-    
+
+    // uniform matrices
     GLint m_uModelViewProjMatrix;
     GLint m_uModelViewMatrix;
     GLint m_uNormalMatrix;
     
     glm::mat4 m_projectionMatrix;
-    glm::mat4 m_viewMatrix;
     glm::mat4 m_cubeModelMatrix;
     glm::mat4 m_sphereModelMatrix;
+    
+    // view controller
+    glmlv::ViewController m_viewController;
 };

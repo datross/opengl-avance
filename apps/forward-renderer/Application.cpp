@@ -22,7 +22,7 @@ int Application::run()
         glm::mat4 NormalMatrix;
         
         // cube
-        MVMatrix = m_viewMatrix * m_cubeModelMatrix;
+        MVMatrix = m_viewController.getViewMatrix() * m_cubeModelMatrix;
         MVPMatrix = m_projectionMatrix * MVMatrix;
         NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
         glUniformMatrix4fv(m_uModelViewMatrix, 1, GL_FALSE, &MVMatrix[0][0]);
@@ -32,7 +32,7 @@ int Application::run()
         glDrawElements(GL_TRIANGLES, m_geometryCube.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
         
         // sphere
-        MVMatrix = m_viewMatrix * m_sphereModelMatrix;
+        MVMatrix = m_viewController.getViewMatrix() * m_sphereModelMatrix;
         MVPMatrix = m_projectionMatrix * MVMatrix;
         NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
         glUniformMatrix4fv(m_uModelViewMatrix, 1, GL_FALSE, &MVMatrix[0][0]);
@@ -68,7 +68,7 @@ int Application::run()
         auto ellapsedTime = glfwGetTime() - seconds;
         auto guiHasFocus = ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
         if (!guiHasFocus) {
-            //viewController.update(float(ellapsedTime))
+            m_viewController.update(float(ellapsedTime));
         }
     }
 
@@ -79,8 +79,8 @@ Application::Application(int argc, char** argv):
     m_AppPath { glmlv::fs::path{ argv[0] } },
     m_AppName { m_AppPath.stem().string() },
     m_ImGuiIniFilename { m_AppName + ".imgui.ini" },
-    m_ShadersRootPath { m_AppPath.parent_path() / "shaders" }
-
+    m_ShadersRootPath { m_AppPath.parent_path() / "shaders" },
+    m_viewController(m_GLFWHandle.window())
 {
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
     
@@ -143,14 +143,16 @@ Application::Application(int argc, char** argv):
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     
+    // init shader
     m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "/forward.vs.glsl", m_ShadersRootPath / m_AppName / "/forward.fs.glsl" });
     m_uModelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
     m_uModelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
     m_uNormalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
     m_program.use();
     
+    // init matrices
     m_projectionMatrix = glm::perspective(glm::radians(70.f), m_nWindowWidth / (float) m_nWindowHeight, 0.1f, 100.f);
-    m_viewMatrix = glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    m_viewController.setViewMatrix(glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)));
     m_cubeModelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(1, 0, 0));
     m_sphereModelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(-1, 0, 0));
 }
