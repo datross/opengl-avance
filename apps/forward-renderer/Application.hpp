@@ -37,10 +37,21 @@ private:
     GLint m_uModelViewProjMatrix;
     GLint m_uModelViewMatrix;
     GLint m_uNormalMatrix;
-    
     glm::mat4 m_projectionMatrix;
     glm::mat4 m_cubeModelMatrix;
     glm::mat4 m_sphereModelMatrix;
+    
+    GLint m_uDirectionalLightDir;
+    GLint m_uDirectionalLightIntensity;
+    GLint m_uPointLightPosition;
+    GLint m_uPointLightIntensity;
+    glm::vec3 m_directionalLightDir;
+    glm::vec3 m_directionalLightIntensity;
+    glm::vec3 m_pointLightPosition;
+    glm::vec3 m_pointLightIntensity;
+    
+    GLint m_uKd;
+    glm::vec3 m_Kd;
     
     // view controller
     glmlv::ViewController m_viewController;

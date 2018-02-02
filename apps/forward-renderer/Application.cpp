@@ -15,19 +15,31 @@ int Application::run()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Put here rendering code
+        // Rendering
+        
+        // send object Kd, and lights intensities
+        m_directionalLightDir = glm::normalize(m_directionalLightDir);
+        glUniform3fv(m_uKd, 1, &m_Kd[0]);
+        glUniform3fv(m_uDirectionalLightIntensity, 1, &m_directionalLightIntensity[0]);
+        glUniform3fv(m_uPointLightIntensity, 1, &m_pointLightIntensity[0]);
         
         glm::mat4 MVMatrix;
         glm::mat4 MVPMatrix;
         glm::mat4 NormalMatrix;
+        glm::vec3 directionnalLightDirViewSpace;
+        glm::vec3 pointLightPositionViewSpace;
         
         // cube
         MVMatrix = m_viewController.getViewMatrix() * m_cubeModelMatrix;
         MVPMatrix = m_projectionMatrix * MVMatrix;
         NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
+        directionnalLightDirViewSpace = glm::vec3(MVMatrix * glm::vec4(m_directionalLightDir, 0));
+        pointLightPositionViewSpace = glm::vec3(MVMatrix * glm::vec4(m_pointLightPosition, 1));
         glUniformMatrix4fv(m_uModelViewMatrix, 1, GL_FALSE, &MVMatrix[0][0]);
         glUniformMatrix4fv(m_uModelViewProjMatrix, 1, GL_FALSE, &MVPMatrix[0][0]);
         glUniformMatrix4fv(m_uNormalMatrix, 1, GL_FALSE, &NormalMatrix[0][0]);
+        glUniform3fv(m_uDirectionalLightDir, 1, &directionnalLightDirViewSpace[0]);
+        glUniform3fv(m_uPointLightPosition, 1, &pointLightPositionViewSpace[0]);
         glBindVertexArray(m_vaoCube);
         glDrawElements(GL_TRIANGLES, m_geometryCube.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
         
@@ -35,9 +47,13 @@ int Application::run()
         MVMatrix = m_viewController.getViewMatrix() * m_sphereModelMatrix;
         MVPMatrix = m_projectionMatrix * MVMatrix;
         NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
+        directionnalLightDirViewSpace = glm::vec3(MVMatrix * glm::vec4(m_directionalLightDir, 0));
+        pointLightPositionViewSpace = glm::vec3(MVMatrix * glm::vec4(m_pointLightPosition, 1));
         glUniformMatrix4fv(m_uModelViewMatrix, 1, GL_FALSE, &MVMatrix[0][0]);
         glUniformMatrix4fv(m_uModelViewProjMatrix, 1, GL_FALSE, &MVPMatrix[0][0]);
         glUniformMatrix4fv(m_uNormalMatrix, 1, GL_FALSE, &NormalMatrix[0][0]);
+        glUniform3fv(m_uDirectionalLightDir, 1, &directionnalLightDirViewSpace[0]);
+        glUniform3fv(m_uPointLightPosition, 1, &pointLightPositionViewSpace[0]);
         glBindVertexArray(m_vaoSphere);
         glDrawElements(GL_TRIANGLES, m_geometrySphere.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
@@ -52,6 +68,11 @@ int Application::run()
             if (ImGui::ColorEdit3("clearColor", clearColor)) {
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
             }
+            ImGui::SliderFloat3("Kd objects", &m_Kd[0], 0., 1.);
+            ImGui::SliderFloat3("pos pointlight", &m_pointLightPosition[0], -5., 5.);
+            ImGui::SliderFloat3("intensity pointlight", &m_pointLightIntensity[0], 0., 10);
+            ImGui::SliderFloat3("dir dirlight", &m_directionalLightDir[0], -1, 1);
+            ImGui::SliderFloat3("intensity dirlight", &m_directionalLightIntensity[0], 0., 2.);
             ImGui::End();
         }
 
@@ -118,7 +139,7 @@ Application::Application(int argc, char** argv):
     glBindVertexArray(0);
     
     // Init for sphere
-    m_geometrySphere = glmlv::makeSphere(8);
+    m_geometrySphere = glmlv::makeSphere(32);
         
     glGenBuffers(1, &m_vboSphere);
     glBindBuffer(GL_ARRAY_BUFFER, m_vboSphere);
@@ -148,6 +169,11 @@ Application::Application(int argc, char** argv):
     m_uModelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
     m_uModelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
     m_uNormalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
+    m_uDirectionalLightDir = glGetUniformLocation(m_program.glId(), "uDirectionalLightDir");
+    m_uDirectionalLightIntensity = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
+    m_uPointLightPosition = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
+    m_uPointLightIntensity = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
+    m_uKd = glGetUniformLocation(m_program.glId(), "uKd");
     m_program.use();
     
     // init matrices
@@ -155,6 +181,13 @@ Application::Application(int argc, char** argv):
     m_viewController.setViewMatrix(glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)));
     m_cubeModelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(1, 0, 0));
     m_sphereModelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(-1, 0, 0));
+    
+    // init light & colors uniforms vec3
+    m_directionalLightDir = glm::vec3(1, -1, 0);
+    m_directionalLightIntensity = glm::vec3(1, 1, 1);
+    m_pointLightPosition = glm::vec3(-1, 2, 0);
+    m_pointLightIntensity = glm::vec3(10, 10, 10);
+    m_Kd = glm::vec3(1, 0, 0);
 }
 
 Application::~Application()

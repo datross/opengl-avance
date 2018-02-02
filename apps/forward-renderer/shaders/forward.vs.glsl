@@ -11,6 +11,7 @@ uniform mat4 uNormalMatrix;
 out vec3 vViewSpacePosition;
 out vec3 vViewSpaceNormal;
 out vec2 vTexCoords;
+
 void main() {
     vec4 position = vec4(aPosition, 1);
     vec4 normal = vec4(aNormal, 0);
