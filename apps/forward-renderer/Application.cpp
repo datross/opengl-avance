@@ -187,7 +187,7 @@ Application::Application(int argc, char** argv):
     m_directionalLightIntensity = glm::vec3(1, 1, 1);
     m_pointLightPosition = glm::vec3(-1, 2, 0);
     m_pointLightIntensity = glm::vec3(10, 10, 10);
-    m_Kd = glm::vec3(1, 0, 0);
+    m_Kd = glm::vec3(1, 1, 1);
 }
 
 Application::~Application()

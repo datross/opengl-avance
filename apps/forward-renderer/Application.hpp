@@ -53,6 +53,9 @@ private:
     GLint m_uKd;
     glm::vec3 m_Kd;
     
+    GLint m_uKdSampler;
+    // TODO
+    
     // view controller
     glmlv::ViewController m_viewController;
 };
