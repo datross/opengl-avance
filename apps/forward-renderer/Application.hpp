@@ -6,6 +6,7 @@
 #include <glmlv/simple_geometry.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glmlv/ViewController.hpp>
+#include <glmlv/Image2DRGBA.hpp>
 
 class Application
 {
@@ -23,6 +24,7 @@ private:
     const std::string m_AppName;
     const std::string m_ImGuiIniFilename;
     const glmlv::fs::path m_ShadersRootPath;
+    const glmlv::fs::path m_AssetsRootPath;
     
     // Cube && sphere geometry
     GLuint m_vboCube, m_vboSphere;
@@ -54,7 +56,9 @@ private:
     glm::vec3 m_Kd;
     
     GLint m_uKdSampler;
-    // TODO
+    GLuint m_sampler;
+    glmlv::Image2DRGBA m_tex1, m_tex2;
+    GLuint m_tex1Id, m_tex2Id;
     
     // view controller
     glmlv::ViewController m_viewController;

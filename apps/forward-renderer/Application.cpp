@@ -17,6 +17,10 @@ int Application::run()
 
         // Rendering
         
+        glActiveTexture(GL_TEXTURE0);
+        glUniform1i(m_uKdSampler, 0);
+        glBindSampler(0, m_sampler);
+        
         // send object Kd, and lights intensities
         m_directionalLightDir = glm::normalize(m_directionalLightDir);
         glUniform3fv(m_uKd, 1, &m_Kd[0]);
@@ -41,6 +45,7 @@ int Application::run()
         glUniform3fv(m_uDirectionalLightDir, 1, &directionnalLightDirViewSpace[0]);
         glUniform3fv(m_uPointLightPosition, 1, &pointLightPositionViewSpace[0]);
         glBindVertexArray(m_vaoCube);
+        glBindTexture(GL_TEXTURE_2D, m_tex1Id);
         glDrawElements(GL_TRIANGLES, m_geometryCube.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
         
         // sphere
@@ -55,6 +60,7 @@ int Application::run()
         glUniform3fv(m_uDirectionalLightDir, 1, &directionnalLightDirViewSpace[0]);
         glUniform3fv(m_uPointLightPosition, 1, &pointLightPositionViewSpace[0]);
         glBindVertexArray(m_vaoSphere);
+        glBindTexture(GL_TEXTURE_2D, m_tex2Id);
         glDrawElements(GL_TRIANGLES, m_geometrySphere.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
         
@@ -101,6 +107,7 @@ Application::Application(int argc, char** argv):
     m_AppName { m_AppPath.stem().string() },
     m_ImGuiIniFilename { m_AppName + ".imgui.ini" },
     m_ShadersRootPath { m_AppPath.parent_path() / "shaders" },
+    m_AssetsRootPath { m_AppPath.parent_path() / "assets" },
     m_viewController(m_GLFWHandle.window())
 {
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
@@ -174,6 +181,7 @@ Application::Application(int argc, char** argv):
     m_uPointLightPosition = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
     m_uPointLightIntensity = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
     m_uKd = glGetUniformLocation(m_program.glId(), "uKd");
+    m_uKdSampler = glGetUniformLocation(m_program.glId(), "uKdSampler");
     m_program.use();
     
     // init matrices
@@ -188,6 +196,24 @@ Application::Application(int argc, char** argv):
     m_pointLightPosition = glm::vec3(-1, 2, 0);
     m_pointLightIntensity = glm::vec3(10, 10, 10);
     m_Kd = glm::vec3(1, 1, 1);
+    
+    // init textures
+    m_tex1 = glmlv::readImage( m_AssetsRootPath / m_AppName / "textures/imag-de-chat.jpg");
+    m_tex2 = glmlv::readImage( m_AssetsRootPath / m_AppName / "textures/opengl-logo.png");
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, &m_tex1Id);
+    glGenTextures(1, &m_tex2Id);
+    glBindTexture(GL_TEXTURE_2D, m_tex1Id);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_tex1.width(), m_tex1.height());
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_tex1.width(), m_tex1.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_tex1.data());
+    glBindTexture(GL_TEXTURE_2D, m_tex2Id);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, m_tex2.width(), m_tex2.height());
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_tex2.width(), m_tex2.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_tex2.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
+    
+    glGenSamplers(1, &m_sampler);
+    glSamplerParameteri(m_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(m_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 Application::~Application()
