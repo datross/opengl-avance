@@ -17,10 +17,29 @@ int Application::run()
 
         // Put here rendering code
         
+        glm::mat4 MVMatrix;
+        glm::mat4 MVPMatrix;
+        glm::mat4 NormalMatrix;
+        
+        // cube
+        MVMatrix = m_viewMatrix * m_cubeModelMatrix;
+        MVPMatrix = m_projectionMatrix * MVMatrix;
+        NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
+        glUniformMatrix4fv(m_uModelViewMatrix, 1, GL_FALSE, &MVMatrix[0][0]);
+        glUniformMatrix4fv(m_uModelViewProjMatrix, 1, GL_FALSE, &MVPMatrix[0][0]);
+        glUniformMatrix4fv(m_uNormalMatrix, 1, GL_FALSE, &NormalMatrix[0][0]);
         glBindVertexArray(m_vaoCube);
-        glDrawArrays(GL_TRIANGLES, 0, m_geometryCube.vertexBuffer.size());
+        glDrawElements(GL_TRIANGLES, m_geometryCube.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
+        
+        // sphere
+        MVMatrix = m_viewMatrix * m_sphereModelMatrix;
+        MVPMatrix = m_projectionMatrix * MVMatrix;
+        NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
+        glUniformMatrix4fv(m_uModelViewMatrix, 1, GL_FALSE, &MVMatrix[0][0]);
+        glUniformMatrix4fv(m_uModelViewProjMatrix, 1, GL_FALSE, &MVPMatrix[0][0]);
+        glUniformMatrix4fv(m_uNormalMatrix, 1, GL_FALSE, &NormalMatrix[0][0]);
         glBindVertexArray(m_vaoSphere);
-        glDrawArrays(GL_TRIANGLES, 0, m_geometrySphere.vertexBuffer.size());
+        glDrawElements(GL_TRIANGLES, m_geometrySphere.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
         
         // GUI code:
@@ -124,14 +143,16 @@ Application::Application(int argc, char** argv):
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
     
-    m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "forward.vs.glsl", m_ShadersRootPath / m_AppName / "forward.fs.glsl" });
+    m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "/forward.vs.glsl", m_ShadersRootPath / m_AppName / "/forward.fs.glsl" });
     m_uModelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
     m_uModelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
     m_uNormalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
     m_program.use();
     
     m_projectionMatrix = glm::perspective(glm::radians(70.f), m_nWindowWidth / (float) m_nWindowHeight, 0.1f, 100.f);
-    m_viewMatrix = glm::lookAt(/* TODO */); // TODO
+    m_viewMatrix = glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    m_cubeModelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(1, 0, 0));
+    m_sphereModelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(-1, 0, 0));
 }
 
 Application::~Application()
