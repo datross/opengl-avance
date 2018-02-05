@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glmlv/ViewController.hpp>
 #include <glmlv/Image2DRGBA.hpp>
+#include <glmlv/load_obj.hpp>
 
 class Application
 {
@@ -26,6 +27,23 @@ private:
     const glmlv::fs::path m_ShadersRootPath;
     const glmlv::fs::path m_AssetsRootPath;
     
+    glmlv::ObjData m_objData;
+    
+    GLuint m_vaoModel,
+           m_vboModel,
+           m_iboModel;
+           
+    // shaders
+    glmlv::GLProgram m_program;
+    
+    GLint m_uModelViewProjMatrix;
+    GLint m_uModelViewMatrix;
+    GLint m_uNormalMatrix;
+    glm::mat4 m_projectionMatrix;
+    
+    glmlv::ViewController m_viewController;
+    
+    /*
     // Cube && sphere geometry
     GLuint m_vboCube, m_vboSphere;
     GLuint m_vaoCube, m_vaoSphere;   
@@ -62,4 +80,5 @@ private:
     
     // view controller
     glmlv::ViewController m_viewController;
+    */
 };

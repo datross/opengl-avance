@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <glmlv/imgui_impl_glfw_gl3.hpp>
+#include <glmlv/load_obj.hpp>
 
 int Application::run()
 {
@@ -17,6 +18,27 @@ int Application::run()
 
         // Rendering
         
+        
+        glm::mat4 MVMatrix;
+        glm::mat4 MVPMatrix;
+        glm::mat4 NormalMatrix;
+        
+        MVMatrix = m_viewController.getViewMatrix();
+        MVPMatrix = m_projectionMatrix * MVMatrix;
+        NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
+        glUniformMatrix4fv(m_uModelViewMatrix, 1, GL_FALSE, &MVMatrix[0][0]);
+        glUniformMatrix4fv(m_uModelViewProjMatrix, 1, GL_FALSE, &MVPMatrix[0][0]);
+        glUniformMatrix4fv(m_uNormalMatrix, 1, GL_FALSE, &NormalMatrix[0][0]);
+        glBindVertexArray(m_vaoModel);
+        auto indexOffset = 0;
+        for (const auto indexCount: m_objData.indexCountPerShape)
+        {
+            glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (const GLvoid*) (indexOffset * sizeof(GLuint)));
+            indexOffset += indexCount;
+        }
+        glBindVertexArray(0);
+        
+        /*
         glActiveTexture(GL_TEXTURE0);
         glUniform1i(m_uKdSampler, 0);
         glBindSampler(0, m_sampler);
@@ -63,7 +85,7 @@ int Application::run()
         glBindTexture(GL_TEXTURE_2D, m_tex2Id);
         glDrawElements(GL_TRIANGLES, m_geometrySphere.indexBuffer.size(), GL_UNSIGNED_INT, nullptr);
         glBindVertexArray(0);
-        
+        */
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
 
@@ -74,11 +96,11 @@ int Application::run()
             if (ImGui::ColorEdit3("clearColor", clearColor)) {
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
             }
-            ImGui::SliderFloat3("Kd objects", &m_Kd[0], 0., 1.);
+            /*ImGui::SliderFloat3("Kd objects", &m_Kd[0], 0., 1.);http://graphics.cs.williams.edu/data/meshes.xml
             ImGui::SliderFloat3("pos pointlight", &m_pointLightPosition[0], -5., 5.);
             ImGui::SliderFloat3("intensity pointlight", &m_pointLightIntensity[0], 0., 10);
             ImGui::SliderFloat3("dir dirlight", &m_directionalLightDir[0], -1, 1);
-            ImGui::SliderFloat3("intensity dirlight", &m_directionalLightIntensity[0], 0., 2.);
+            ImGui::SliderFloat3("intensity dirlight", &m_directionalLightIntensity[0], 0., 2.);*/
             ImGui::End();
         }
 
@@ -115,6 +137,49 @@ Application::Application(int argc, char** argv):
     
     glEnable(GL_DEPTH_TEST);
     
+    glmlv::loadObj(m_AssetsRootPath / m_AppName / "models/crytek-sponza/sponza.obj", m_objData);
+    
+    glGenBuffers(1, &m_vboModel);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboModel);
+    glBufferStorage(GL_ARRAY_BUFFER, m_objData.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), m_objData.vertexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glGenBuffers(1, &m_iboModel);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_iboModel);
+    glBufferStorage(GL_ELEMENT_ARRAY_BUFFER, m_objData.indexBuffer.size() * sizeof(uint32_t), m_objData.indexBuffer.data(), 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    
+    const GLuint VERTEX_ATTR_POSITION = 0;
+    const GLuint VERTEX_ATTR_NORMAL = 1;
+    const GLuint VERTEX_ATTR_UV = 2;
+    
+    glGenVertexArrays(1, &m_vaoModel);
+    glBindVertexArray(m_vaoModel);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_iboModel);
+    glEnableVertexAttribArray(VERTEX_ATTR_POSITION);
+    glEnableVertexAttribArray(VERTEX_ATTR_NORMAL);
+    glEnableVertexAttribArray(VERTEX_ATTR_UV);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboModel);
+    glVertexAttribPointer(VERTEX_ATTR_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
+    glVertexAttribPointer(VERTEX_ATTR_NORMAL,   3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
+    glVertexAttribPointer(VERTEX_ATTR_UV,       2, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, texCoords));
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    
+    // init shader
+    m_program = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "/forward.vs.glsl", m_ShadersRootPath / m_AppName / "/forward.fs.glsl" });
+    m_uModelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
+    m_uModelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
+    m_uNormalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
+    m_program.use();
+    
+    // init matrices
+    const auto sceneDiagonalSize = glm::length(m_objData.bboxMax - m_objData.bboxMin);
+    m_projectionMatrix = glm::perspective(glm::radians(70.f), m_nWindowWidth / (float) m_nWindowHeight, 0.01f * sceneDiagonalSize, 100.f * sceneDiagonalSize);
+    m_viewController.setSpeed(sceneDiagonalSize * 0.1f);
+    m_viewController.setViewMatrix(glm::lookAt(glm::vec3(0, 0, 4), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0)));
+    
+    /*
     const GLuint VERTEX_ATTR_POSITION = 0;
     const GLuint VERTEX_ATTR_NORMAL = 1;
     const GLuint VERTEX_ATTR_UV = 2;
@@ -140,7 +205,7 @@ Application::Application(int argc, char** argv):
     glEnableVertexAttribArray(VERTEX_ATTR_UV);
     glBindBuffer(GL_ARRAY_BUFFER, m_vboCube);
     glVertexAttribPointer(VERTEX_ATTR_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
-    glVertexAttribPointer(VERTEX_ATTR_NORMAL,   3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
+    glVertexAttribPointer(VERTEX_ATTR_NORCubeMAL,   3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
     glVertexAttribPointer(VERTEX_ATTR_UV,       3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, texCoords));
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -148,7 +213,7 @@ Application::Application(int argc, char** argv):
     // Init for sphere
     m_geometrySphere = glmlv::makeSphere(32);
         
-    glGenBuffers(1, &m_vboSphere);
+        glGenBuffers(1, &m_vboSphere);les matériaux de ObjData.
     glBindBuffer(GL_ARRAY_BUFFER, m_vboSphere);
     glBufferStorage(GL_ARRAY_BUFFER, m_geometrySphere.vertexBuffer.size() * sizeof(glmlv::Vertex3f3f2f), m_geometrySphere.vertexBuffer.data(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -214,15 +279,22 @@ Application::Application(int argc, char** argv):
     glGenSamplers(1, &m_sampler);
     glSamplerParameteri(m_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glSamplerParameteri(m_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    */
 }
 
 Application::~Application()
 {
+    glDeleteBuffers(1, &m_vboModel);
+    glDeleteBuffers(1, &m_iboModel);
+    glDeleteVertexArrays(1, &m_vaoModel);
+    
+    /*
     glDeleteBuffers(1, &m_vboCube);
     glDeleteBuffers(1, &m_vboSphere);
     glDeleteBuffers(1, &m_iboCube);
     glDeleteBuffers(1, &m_iboSphere);
     glDeleteVertexArrays(1, &m_vaoCube);
     glDeleteVertexArrays(1, &m_vaoSphere);
+    */
 }
 
