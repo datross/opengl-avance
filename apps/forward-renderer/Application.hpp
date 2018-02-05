@@ -41,6 +41,26 @@ private:
     GLint m_uNormalMatrix;
     glm::mat4 m_projectionMatrix;
     
+    // textures & materials
+    std::vector<GLuint> m_texIds;
+    GLuint m_sampler;
+    GLint m_uSamplerKa,
+          m_uSamplerKd,
+          m_uSamplerKs,
+          m_uSamplerShininess;
+    GLint m_uKa,
+          m_uKd,
+          m_uKs,
+          m_uShininess;
+    glmlv::ObjData::PhongMaterial m_defaultMaterial;
+    GLuint m_whiteTexture;
+          
+    // light
+    GLint m_uDirectionalLightDir;
+    GLint m_uDirectionalLightIntensity;
+    glm::vec3 m_directionalLightDir;
+    glm::vec3 m_directionalLightIntensity;
+    
     glmlv::ViewController m_viewController;
     
     /*
