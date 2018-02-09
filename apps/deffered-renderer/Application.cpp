@@ -85,9 +85,12 @@ int Application::run()
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO);
         glReadBuffer(GL_COLOR_ATTACHMENT0 + m_blitPass);
-        glBlitFramebuffer(0, 0, m_nWindowWidth, m_nWindowHeight,
-                          0, 0, m_nWindowWidth, m_nWindowHeight,
-                          GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        m_shadingProgram.use();
+        glUniform3fv(m_uDirectionalLightIntensity, 1, &m_directionalLightIntensity[0]);
+        glUniform3fv(m_uDirectionalLightDir, 1, &directionnalLightDirViewSpace[0]);
+//         glBlitFramebuffer(0, 0, m_nWindowWidth, m_nWindowHeight,
+//                           0, 0, m_nWindowWidth, m_nWindowHeight,
+//                           GL_COLOR_BUFFER_BIT, GL_LINEAR);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         
         // GUI code:
@@ -269,6 +272,25 @@ m_viewController(m_GLFWHandle.window())
         throw std::runtime_error("FrameBuffer in an invalid state.");
     }
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    
+    m_shadingProgram = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "/shadingPass.vs.glsl", m_ShadersRootPath / m_AppName / "/shadingPass.fs.glsl" });
+    m_uDirectionalLightDir = glGetUniformLocation(m_shadingProgram.glId(), "uDirectionalLightDir");
+    m_uDirectionalLightIntensity = glGetUniformLocation(m_shadingProgram.glId(), "uDirectionalLightIntensity");
+    
+    
+    float triangleBuffer[] = { -1, 1, 3, -1, -1, 3 };
+    glGenBuffers(1, &m_vboTriangleBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboTriangleBuffer);
+    glBufferStorage(GL_ARRAY_BUFFER, 6 * sizeof(float), triangleBuffer, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
+    glGenVertexArrays(1, &m_vaoTriangleBuffer);
+    glBindVertexArray(m_vaoTriangleBuffer);
+    glEnableVertexAttribArray(VERTEX_ATTR_POSITION);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vboModel);
+    glVertexAttribPointer(VERTEX_ATTR_POSITION, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 Application::~Application()

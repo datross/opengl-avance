@@ -33,7 +33,7 @@ private:
            m_vboModel,
            m_iboModel;
            
-    // shaders
+    // shader
     glmlv::GLProgram m_program;
     
     GLint m_uModelViewProjMatrix;
@@ -77,9 +77,12 @@ private:
         GDepth, // On doit créer une texture de depth mais on écrit pas directement dedans dans le FS. OpenGL le fait pour nous (et l'utilise).
         GBufferTextureCount
     };
-    GLuint m_GBufferTextures[GBufferTextureCount];
-    
+    GLuint m_GBufferTextures[GBufferTextureCount];    
     GLuint m_FBO;
-    
     int m_blitPass = 1;
+    
+    glmlv::GLProgram m_shadingProgram;
+    
+    GLuint m_vaoTriangleBuffer,
+           m_vboTriangleBuffer;
 };

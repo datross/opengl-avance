@@ -10,11 +10,6 @@ layout(location = 2) out vec3 fAmbient;
 layout(location = 3) out vec3 fDiffuse;
 layout(location = 4) out vec4 fGlossyShininess;
 
-
-
-uniform vec3 uDirectionalLightDir;
-uniform vec3 uDirectionalLightIntensity;;
-
 uniform sampler2D uSamplerKa;
 uniform sampler2D uSamplerKd;
 uniform sampler2D uSamplerKs;
